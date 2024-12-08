@@ -64,23 +64,23 @@ Example:
 
 ```json
 {
-  "charLimit": 540,
-  "countBytes": false,
+  "charLimit": 300,
+  "countBytes": true,
   "voices": [
     {
-      "vid": "Conrad",
-      "name": "Conrad",
-      "flag": "US",
+      "vid": "en_uk_001",
+      "name": "Narrator (Chris)",
+      "flag": "GB",
       "lang": "English",
-      "accent": "American",
+      "accent": "England",
       "gender": "M"
     },
     {
-      "vid": "RestOfVoicesHere",
+      "vid": "rest_of_voices_here",
       "name": "Rest Of Voices Here",
-      "flag": "US",
+      "flag": "GB",
       "lang": "English",
-      "accent": "American",
+      "accent": "England",
       "gender": "M"
     }
   ]
