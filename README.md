@@ -87,7 +87,7 @@ Example:
 }
 ```
 
-# Playing with phiola
+# Play TTS Audio With phiola
 
 ```
 plays TTS audio using phiola, returns playback status
