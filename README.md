@@ -1,4 +1,4 @@
-Fetches TTS audio from a couple of free services. Returns the result encoded in base64 wrapped in JSON or TTS audio can be played using [phiola](https://github.com/stsaz/phiola).
+Fetches TTS audio from a couple of free services. By default, the resulting audio is returned in base64 encoded format wrapped in JSON. TTS audio can also be played using [phiola](https://github.com/stsaz/phiola).
 
 # Basic Usage
 
