@@ -39,7 +39,7 @@ def weilnet [voice text] {
 def weilbyte [voice text] {
     # setup body json
     let body = $text | wrap text | merge ($voice | wrap voice) | to json -r
-    # make http post request and bas64 encode result, fallback to gesserit
+    # make http post request and bas64 encode result, fallback to cursecode
     let base64 = try {
         http post -m 6sec -H [content-type application/json] "https://tiktok-tts.weilbyte.dev/api/generate" $body | encode base64
     } catch {
