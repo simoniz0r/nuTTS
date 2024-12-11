@@ -135,12 +135,13 @@ def "main list" [
 
 # plays TTS audio using phiola, returns playback status
 #
-# results are output in JSON format
+# results are output in JSON format by default
 def "main play" [
     voice:string # voice ID for TTS
     service:string # service voice is from
     text:string # text to speek
     --device (-d):int = 0 # device number for TTS playback; 0 is system default
+    --exit-code (-e) = false # output phiola exit code instead of JSON
     --timeout (-t):int = 60 # max playback seconds for TTS
     --volume (-v):int = 100 # playback volume for TTS (0-100)
     --wait (-w):duration = 0sec # seconds to wait before starting TTS playback
@@ -173,8 +174,14 @@ def "main play" [
     } catch {
         |e| return ($e.json | from json | wrap error | to json)
     }
-    # return phiola result as json
-    return ($playback | to json)
+    # return phiola result as json if $exit_code is false
+    if $exit_code == false {
+        return ($playback | to json)
+    # else output only exit code
+    } else {
+        let phiola_exit = try { $playback | get exit_code } catch { |e| return ($e.json | from json | wrap error | to json) }
+        return $phiola_exit
+    }
 }
 
 # gets TTS audio for given service, returns base64 encoded audio
