@@ -92,15 +92,17 @@ Example:
 ```
 plays TTS audio using phiola, returns playback status
 
-results are output in JSON format
+results are output in JSON format by default
 
 Usage:
   > nuTTS play {flags} <voice> <service> <text>
 
 Flags:
-  -d, --device <int>: device number for TTS playback (default: 1)
+  -d, --device <int>: device number for TTS playback; 0 is system default (default: 0)
+  -e, --exit-code <bool>: output phiola exit code instead of JSON (default: false)
   -t, --timeout <int>: max playback seconds for TTS (default: 60)
   -v, --volume <int>: playback volume for TTS (0-100) (default: 100)
+  -w, --wait <duration>: seconds to wait before starting TTS playback (default: 0sec)
   -h, --help: Display the help message for this command
 
 Parameters:
@@ -111,7 +113,7 @@ Parameters:
 
 Example:
 
-`nuTTS play --device 2 --volume 10 --timeout 20 Brian Streamlabs "test message"`
+`nuTTS play --device 2 --volume 10 --timeout 20 --wait 5sec Brian Streamlabs "test message"`
 
 ```json
 {
