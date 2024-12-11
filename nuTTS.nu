@@ -118,14 +118,14 @@ def "main list" [
 ]: nothing -> string {
     if $service == "all" {
         let list = try {
-            http get -r "https://dl.imgix.net/tts_list.json"
+            http get -r "https://raw.githubusercontent.com/simoniz0r/nuTTS/main/tts_list.json"
         } catch {
             |e| return ($e.json | from json | wrap error | to json)
         }
         return $list
     } else {
         let list = try {
-            http get "https://dl.imgix.net/tts_list.json" | get $service | to json
+            http get "https://raw.githubusercontent.com/simoniz0r/nuTTS/main/tts_list.json" | get $service | to json
         } catch {
             |e| return ($e.json | from json | wrap error | to json)
         }
