@@ -1,4 +1,4 @@
-Fetches TTS audio from a couple of free services. By default, the resulting audio is returned in base64 encoded format wrapped in JSON. TTS audio can also be played using [phiola](https://github.com/stsaz/phiola).
+nuTTS fetches TTS audio from free services such as [lazypy.ro](https://lazypy.ro/tts), [Uberduck.ai](https://www.uberduck.ai/), and a few services that offer TikTok TTS voices. By default, the resulting audio is returned in base64 encoded format wrapped in JSON. TTS audio can also be played using [phiola](https://github.com/stsaz/phiola). nuTTS is intended to be used with Twitch bots such as [Firebot](https://firebot.app/) to provide TTS for alerts.
 
 # Basic Usage
 
