@@ -140,10 +140,19 @@ def "main play" [
     voice:string # voice ID for TTS
     service:string # service voice is from
     text:string # text to speek
-    --device (-d):int = 1 # device number for TTS playback
+    --device (-d):int = 0 # device number for TTS playback; 0 is system default
     --timeout (-t):int = 60 # max playback seconds for TTS
     --volume (-v):int = 100 # playback volume for TTS (0-100)
 ]: nothing -> string {
+    # get default device
+    if $device == 0 {
+        let device = try {
+            phiola device list | complete | get stdout | lines | find "- Default" | get 0 | str snake-case | split row "_" | get 1
+        # return if error
+        } catch {
+            |e| return ($e.json | from json | wrap error | to json)
+        }
+    }
     # decode text
     let detext = $text | url decode
     # route based on service
