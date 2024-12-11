@@ -143,6 +143,7 @@ def "main play" [
     --device (-d):int = 0 # device number for TTS playback; 0 is system default
     --timeout (-t):int = 60 # max playback seconds for TTS
     --volume (-v):int = 100 # playback volume for TTS (0-100)
+    --wait (-w):duration = 0sec # seconds to wait before starting TTS playback
 ]: nothing -> string {
     # get default device
     if $device == 0 {
@@ -164,6 +165,8 @@ def "main play" [
     }
     # get base64 from result
     let base64 = try { $result | get audioUrl | split row "base64," | get 1 } catch { return ($result | to json) }
+    # sleep for $wait before playing
+    sleep $wait
     # decode base64 and play with phiola
     let playback = try {
         $base64 | decode base64 | phiola play -device $device -until $timeout -volume $volume @stdin | complete
