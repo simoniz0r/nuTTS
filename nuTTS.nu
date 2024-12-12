@@ -53,7 +53,7 @@ def weilbyte [voice text] {
 def cursecode [voice text] {
     # setup body json
     let body = $text | wrap text | merge ($voice | wrap voice) | to json -r
-    # make http post request, fallback to weilnet
+    # make http post request, fallback to gesserit
     let req_json = try {
         http post -m 6sec -H [content-type application/json] "https://tts.cursecode.me/api/tts" $body
     } catch {
@@ -116,6 +116,7 @@ def lazypy [voice service text] {
 def "main list" [
     --service (-s):string = all # get voices for specific service
 ]: nothing -> string {
+    # if no --service input, list all services from tts_list.json
     if $service == "all" {
         let list = try {
             http get -r "https://raw.githubusercontent.com/simoniz0r/nuTTS/main/tts_list.json"
@@ -123,6 +124,7 @@ def "main list" [
             |e| return ($e.json | from json | wrap error | to json)
         }
         return $list
+    # else get list for --service input from tts_list.json
     } else {
         let list = try {
             http get "https://raw.githubusercontent.com/simoniz0r/nuTTS/main/tts_list.json" | get $service | to json
