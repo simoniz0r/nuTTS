@@ -148,24 +148,6 @@ def "main play" [
     --volume (-v):int = 100 # playback volume for TTS (0-100)
     --wait (-w):duration = 0sec # seconds to wait before starting TTS playback
 ]: nothing -> string {
-    # get default device
-    if $device == 0 {
-        # get device list
-        let device_list = try {
-            phiola device list | complete
-        } catch {
-            |e| return ($e.json | from json | wrap error | to json)
-        }
-        # return if exit code not 0
-        if ($device_list | get exit_code) != 0 {
-            return ($device_list | wrap error | to json)
-        }
-        # try to find default in device list
-        let device = try {
-            $device_list | get stdout | lines | find "- Default" | get 0 | str snake-case | split row "_" | get 1
-        # fallback to device 1 if cannot find default
-        } catch { 1 }
-    }
     # decode text
     let detext = $text | url decode
     # route based on service
