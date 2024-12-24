@@ -292,7 +292,7 @@ def "main config" [
     }
     # output config in JSON format and delete table from memory
     let output = try { stor open | $in.nuTTS.0 | to json } catch { |e| return ($e.json | from json | wrap error | to json) }
-    stor delete --table-name nuTTS
+    try { stor delete --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error) }
     return $output
 }
 
