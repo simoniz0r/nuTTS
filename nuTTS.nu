@@ -172,14 +172,14 @@ def config_interactive [] {
     }
     # export stor to file
     try {
-        mv -f $"($nu.default-config-dir)/nuTTS.sqlite" $"($nu.default-config-dir)/nuTTS.sqlite.bak"
+        mv -f $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite.bak"
     } catch {
         |e| return ($e.json | from json | wrap error)
     }
     try {
-        stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite"
+        stor export --file-name $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite"
     } catch {
-        |e| mv -f $"($nu.default-config-dir)/nuTTS.sqlite.bak" $"($nu.default-config-dir)/nuTTS.sqlite"
+        |e| mv -f $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite.bak" $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite"
         return ($e.json | from json | wrap error)
     }
     # output config and delete table from memory
@@ -201,11 +201,13 @@ def "main config" [
     --wait (-w):duration  # set default time to wait before playback for 'play' subcommand
 ]: nothing -> string {
     # check if config file exists
-    if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+    if ($"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" | path type) == "file" {
         # import config into stor if exists
-        try { stor import --file-name $"($nu.default-config-dir)/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
+        try { stor import --file-name $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
     } else {
-        # create stor if doesn't exist
+        # config file doesn't exist, create nuTTS config dir
+        try { mkdir $"($nu.default-config-dir)/../nuTTS" } catch { |e| return ($e.json | from json | wrap error | to json) }
+        # create stor
         try {
             stor create --table-name nuTTS --columns {service: str, voice: str, device: int, timeout: int, volume: int, wait: str}
         } catch {
@@ -224,7 +226,7 @@ def "main config" [
             |e| return ($e.json | from json | wrap error | to json)
         }
         # export stor to file
-        try { stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
+        try { stor export --file-name $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
     }
     # run interactive config if no flags used
     if $service == null and $voice == null and $device == null and $timeout == null and $volume == null and $wait == null {
@@ -280,14 +282,14 @@ def "main config" [
     }
     # export stor to file
     try {
-        mv -f $"($nu.default-config-dir)/nuTTS.sqlite" $"($nu.default-config-dir)/nuTTS.sqlite.bak"
+        mv -f $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite.bak"
     } catch {
         |e| return ($e.json | from json | wrap error | to json)
     }
     try {
-        stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite"
+        stor export --file-name $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite"
     } catch {
-        |e| mv -f $"($nu.default-config-dir)/nuTTS.sqlite.bak" $"($nu.default-config-dir)/nuTTS.sqlite"
+        |e| mv -f $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite.bak" $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite"
         return ($e.json | from json | wrap error | to json)
     }
     # output config in JSON format and delete table from memory
@@ -333,9 +335,9 @@ def "main play" [
     --wait (-w):duration # seconds to wait before starting TTS playback (default: 0sec)
 ]: nothing -> string {
     # check if config file exists
-    let settings = if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+    let settings = if ($"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" | path type) == "file" {
         # get settings if nuTTS.sqlite exists
-        try { open $"($nu.default-config-dir)/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
+        try { open $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
     }
     # get settings from default if no inputs
     let voice = if $voice == null { $settings.voice? | default "Brian" } else { $voice }
@@ -382,9 +384,9 @@ def main [
     --voice (-v):string # voice ID for TTS (default: Brian)
 ]: nothing -> string {
     # check if config file exists
-    let settings = if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+    let settings = if ($"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" | path type) == "file" {
         # get settings if nuTTS.sqlite exists
-        try { open $"($nu.default-config-dir)/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
+        try { open $"($nu.default-config-dir)/../nuTTS/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
     }
     # get settings from default if no inputs
     let voice = if $voice == null { $settings.voice? | default "Brian" } else { $voice }
