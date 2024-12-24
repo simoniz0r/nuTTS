@@ -112,7 +112,7 @@ def lazypy [voice service text] {
     return ($base64 | prepend "data:audio/mp3;base64," | str join "" | wrap audioUrl | merge $audio_json)
 }
 
-# gets JSON list of TTS voices
+# Gets JSON list of TTS voices
 def "main list" [
     --service (-s):string = all # get voices for specific service
 ]: nothing -> string {
@@ -135,18 +135,18 @@ def "main list" [
     }
 }
 
-# plays TTS audio using phiola, returns playback status
+# Plays TTS audio using phiola, returns playback status
 #
-# results are output in JSON format by default
+# Results are output in JSON format by default
 def "main play" [
-    voice:string # voice ID for TTS
-    service:string # service voice is from
     text:string # text to speek
-    --device (-d):int = 0 # device number for TTS playback; 0 is system default
-    --exit-code (-e) = false # output phiola exit code instead of JSON
-    --timeout (-t):int = 60 # max playback seconds for TTS
-    --volume (-v):int = 100 # playback volume for TTS (0-100)
-    --wait (-w):duration = 0sec # seconds to wait before starting TTS playback
+    --service (-s):string # service to use for TTS voice (default: Streamlabs)
+    --voice (-v):string # voice ID for TTS (default: Brian)
+    --device (-d):int # device number for TTS playback; 0 is system default (default: 0)
+    --exit-code (-e) # output phiola exit code instead of JSON (default: JSON)
+    --timeout (-t):int # max playback seconds for TTS (default: 60)
+    --volume (-V):int # playback volume for TTS (0-100) (default: 100)
+    --wait (-w):duration # seconds to wait before starting TTS playback (default: 0sec)
 ]: nothing -> string {
     # decode text
     let detext = $text | url decode
@@ -177,13 +177,13 @@ def "main play" [
     }
 }
 
-# gets TTS audio for given service, returns base64 encoded audio
+# Gets TTS audio for given service, returns base64 encoded audio
 #
-# results are output in JSON format
+# Results are output in JSON format
 def main [
-    voice:string # voice ID for TTS
-    service:string # service voice is from
     text:string # text to speek
+    --service (-s):string # service to use for TTS voice (default: Streamlabs)
+    --voice (-v):string # voice ID for TTS (default: Brian)
 ]: nothing -> string {
     # decode text
     let detext = $text | url decode
