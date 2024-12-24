@@ -174,13 +174,13 @@ def config_interactive [] {
     try {
         mv -f $"($nu.default-config-dir)/nuTTS.sqlite" $"($nu.default-config-dir)/nuTTS.sqlite.bak"
     } catch {
-        |e| return ($e.json | from json | wrap error | to json)
+        |e| return ($e.json | from json | wrap error)
     }
     try {
         stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite"
     } catch {
         |e| mv -f $"($nu.default-config-dir)/nuTTS.sqlite.bak" $"($nu.default-config-dir)/nuTTS.sqlite"
-        return ($e.json | from json | wrap error | to json)
+        return ($e.json | from json | wrap error)
     }
     # output config and delete table from memory
     let output = try { stor open | $in.nuTTS.0 } catch { |e| return ($e.json | from json | wrap error) }
