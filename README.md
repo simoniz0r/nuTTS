@@ -3,41 +3,42 @@ nuTTS fetches text-to-speech audio from free services such as [lazypy.ro](https:
 # Basic Usage
 
 ```
-gets TTS audio for given service, returns base64 encoded audio
+Gets TTS audio for given service, returns base64 encoded audio
 
-results are output in JSON format
+Results are output in JSON format
 
 Usage:
-  > nuTTS <voice> <service> <text>
+  > nuTTS {flags} <text>
 
 Subcommands:
-  nuTTS list (custom) - gets JSON list of TTS voices
-  nuTTS play (custom) - plays TTS audio using phiola, returns playback status
+  nuTTS config (custom) - Configures default settings for nuTTS
+  nuTTS list (custom) - Gets JSON list of TTS voices
+  nuTTS play (custom) - Plays TTS audio using phiola, returns playback status
 
 Flags:
+  -s, --service <string>: service to use for TTS voice (default: Streamlabs)
+  -v, --voice <string>: voice ID for TTS (default: Brian)
   -h, --help: Display the help message for this command
 
 Parameters:
-  voice <string>: voice ID for TTS
-  service <string>: service voice is from
   text <string>: text to speek
 ```
 
 Example:
 
-`nuTTS Brian Streamlabs "test message"`
+`nuTTS --service Streamlabs --voice Emma "test message"`
 
 ```json
 {
   "audioUrl": "data:audio/mp3;base64,<base64 encoded audio here>",
   "success": true,
-  "audio_url": "https://lazypy.ro/tts/assets/audio/Streamlabs_Brian_c72b9698fa1927e1dd12d3cf26ed84b2.mp3",
+  "audio_url": "https://lazypy.ro/tts/assets/audio/Streamlabs_Emma_c72b9698fa1927e1dd12d3cf26ed84b2.mp3",
   "info": "HTTP status: 200; Total transfer time: 0.333263 seconds.",
   "error_msg": null,
-  "service_response": "{\"success\":true,\"message\":\"OK\",\"speak_url\":\"https:\\/\\/polly.streamlabs.com\\/v1\\/speech?OutputFormat=mp3&Text=test%20message&VoiceId=Brian&Engine=standard&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAURHYCFGLCVRRFGR5%2F20241208%2Fus-west-2%2Fpolly%2Faws4_request&X-Amz-Date=20241208T050441Z&X-Amz-SignedHeaders=host&X-Amz-Expires=900&X-Amz-Signature=c2627c4f334b9f4e1460d44460713b1d794c8aee1e828019c64ba3dfc146548f\"}",
+  "service_response": "{\"success\":true,\"message\":\"OK\",\"speak_url\":\"https:\\/\\/polly.streamlabs.com\\/v1\\/speech?OutputFormat=mp3&Text=test%20message&VoiceId=Emma&Engine=standard&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAURHYCFGLCVRRFGR5%2F20241208%2Fus-west-2%2Fpolly%2Faws4_request&X-Amz-Date=20241208T050441Z&X-Amz-SignedHeaders=host&X-Amz-Expires=900&X-Amz-Signature=c2627c4f334b9f4e1460d44460713b1d794c8aee1e828019c64ba3dfc146548f\"}",
   "meta": {
     "service": "Streamlabs",
-    "voice_id": "Brian",
+    "voice_id": "Emma",
     "voice_name": "",
     "text": "test message",
     "playlist_index": 0
@@ -45,16 +46,52 @@ Example:
 }
 ```
 
+# Configure nuTTS Settings
+
+```
+Configures default settings for nuTTS
+
+If no flags are used, interactive configuration will be ran
+Results are output in JSON format unless ran in interactive mode
+
+Usage:
+  > nuTTS config {flags}
+
+Flags:
+  -s, --service <string>: set default TTS service (must be used with --voice flag)
+  -v, --voice <string>: set default TTS voice (must be used with --service flag)
+  -d, --device <int>: set default playback device for 'play' subcommand
+  -t, --timeout <int>: set default playback timeout for 'play' subcommand
+  -V, --volume <int>: set default playback volume for 'play' subcommand
+  -w, --wait <duration>: set default time to wait before playback for 'play' subcommand
+  -h, --help: Display the help message for this command
+```
+
+Example:
+
+`nuTTS config --service Streamlabs --voice Emma --device 2 --timeout 20 --volume 10 --wait 0sec`
+
+```json
+{
+  "service": "Streamlabs",
+  "voice": "Emma",
+  "device": 2,
+  "timeout": 20,
+  "volume": 10,
+  "wait": "0sec"
+}
+```
+
 # TTS Voice List
 
 ```
-gets JSON list of TTS voices
+Gets JSON list of TTS voices
 
 Usage:
   > nuTTS list {flags}
 
 Flags:
-  -s, --service <string>: get voices for specific service (default: 'all')
+  -s, --service <string>: get voices for specific service
   -h, --help: Display the help message for this command
 ```
 
@@ -90,30 +127,30 @@ Example:
 # Play TTS Audio With phiola
 
 ```
-plays TTS audio using phiola, returns playback status
+Plays TTS audio using phiola, returns playback status
 
-results are output in JSON format by default
+Results are output in JSON format by default
 
 Usage:
-  > nuTTS play {flags} <voice> <service> <text>
+  > nuTTS play {flags} <text>
 
 Flags:
+  -s, --service <string>: service to use for TTS voice (default: Streamlabs)
+  -v, --voice <string>: voice ID for TTS (default: Brian)
   -d, --device <int>: device number for TTS playback; 0 is system default (default: 0)
-  -e, --exit-code <bool>: output phiola exit code instead of JSON (default: false)
+  -e, --exit-code: output phiola exit code instead of JSON (default: JSON)
   -t, --timeout <int>: max playback seconds for TTS (default: 60)
-  -v, --volume <int>: playback volume for TTS (0-100) (default: 100)
+  -V, --volume <int>: playback volume for TTS (0-100) (default: 100)
   -w, --wait <duration>: seconds to wait before starting TTS playback (default: 0sec)
   -h, --help: Display the help message for this command
 
 Parameters:
-  voice <string>: voice ID for TTS
-  service <string>: service voice is from
   text <string>: text to speek
 ```
 
 Example:
 
-`nuTTS play --device 2 --volume 10 --timeout 20 --wait 5sec Brian Streamlabs "test message"`
+`nuTTS play --device 2 --volume 10 --timeout 20 --wait 5sec --service Streamlabs --voice Emma "test message"`
 
 ```json
 {
