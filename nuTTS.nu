@@ -112,12 +112,196 @@ def lazypy [voice service text] {
     return ($base64 | prepend "data:audio/mp3;base64," | str join "" | wrap audioUrl | merge $audio_json)
 }
 
+# interactive configuration for nuTTS settings
+def config_interactive [] {
+    # get full TTS voice list
+    let list = main list | from json
+    # get list of services
+    let services = $list | columns
+    # select service from list
+    let service = try { $services | input list -f "Select Default TTS Service:" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no service selected
+    if $service == null { return ("No service selected" | wrap error) }
+    # get list of voices for selected service
+    let voices = try { $list | get $service | get voices } catch { |e| return ($e.json | from json | wrap error) }
+    # select voice from list
+    let voice = try { $voices | input list -f "Select Default TTS Voice:" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no voice selected
+    if $voice == null { return ("No voice selected" | wrap error) }
+    # get voice ID from selection
+    let voice = try { $voice | get vid } catch { |e| return ($e.json | from json | wrap error) }
+    # get list of devices
+    let devices = try {
+        phiola device list | complete | get stdout | lines | take until { |r| $r =~ "Capture" } | drop nth 0
+    } catch {
+        |e| return ($e.json | from json | wrap error)
+    }
+    # select device from list
+    let device = try { $devices | input list -f "Select Default Playback Device:" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no device selected
+    if $device == null { return ("No device selected" | wrap error) }
+    # get device number from selection
+    let device = try { $device | str snake-case | split row "_" | get 0 } catch { |e| return ($e.json | from json | wrap error) }
+    # setup list of numbers
+    let numbers = [10,20,30,40,50,60,70,80,90,100]
+    # select timeout from list
+    let timeout = try { $numbers | input list -f "Select Default Playback Timeout (in seconds):" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no timeout selected
+    if $timeout == null { return ("No timeout selected" | wrap error) }
+    # select volume from list
+    let volume = try { $numbers | input list -f "Select Default Playback Volume:" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no volume selected
+    if $volume == null { return ("No volume selected" | wrap error) }
+    # setup list of durations
+    let waits = [0sec,5sec,10sec,15sec,20sec,25sec,30sec]
+    # select wait from list
+    let wait = try { $waits | input list -f "Select Default Time to Wait Before Playback:" } catch { |e| return ($e.json | from json | wrap error) }
+    # return if no wait selected
+    if $wait == null { return ("No wait selected" | wrap error) }
+    # update data in stor
+    try {
+        $service | wrap service
+        | merge ($voice | wrap voice)
+        | merge ($device | wrap device)
+        | merge ($timeout | wrap timeout)
+        | merge ($volume | wrap volume)
+        | merge ($wait | wrap wait)
+        | stor update --table-name nuTTS
+    } catch {
+        |e| return ($e.json | from json | wrap error)
+    }
+    # export stor to file
+    try {
+        mv -f $"($nu.default-config-dir)/nuTTS.sqlite" $"($nu.default-config-dir)/nuTTS.sqlite.bak"
+    } catch {
+        |e| return ($e.json | from json | wrap error | to json)
+    }
+    try {
+        stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite"
+    } catch {
+        |e| mv -f $"($nu.default-config-dir)/nuTTS.sqlite.bak" $"($nu.default-config-dir)/nuTTS.sqlite"
+        return ($e.json | from json | wrap error | to json)
+    }
+    # output config and delete table from memory
+    let output = try { stor open | $in.nuTTS.0 } catch { |e| return ($e.json | from json | wrap error) }
+    try { stor delete --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error) }
+    return $output
+}
+
+# Configures default settings for nuTTS
+#
+# If no flags are used, interactive configuration will be ran
+# Results are output in JSON format unless ran in interactive mode
+def "main config" [
+    --service (-s):string # set default TTS service (must be used with --voice flag)
+    --voice (-v):string # set default TTS voice (must be used with --service flag)
+    --device (-d):int # set default playback device for 'play' subcommand
+    --timeout (-t):int # set default playback timeout for 'play' subcommand
+    --volume (-V):int  # set default playback volume for 'play' subcommand
+    --wait (-w):duration  # set default time to wait before playback for 'play' subcommand
+]: nothing -> string {
+    # check if config file exists
+    if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+        # import config into stor if exists
+        try { stor import --file-name $"($nu.default-config-dir)/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
+    } else {
+        # create stor if doesn't exist
+        try {
+            stor create --table-name nuTTS --columns {service: str, voice: str, device: int, timeout: int, volume: int, wait: str}
+        } catch {
+            |e| return ($e.json | from json | wrap error | to json)
+        }
+        # insert default data into stor
+        try {
+            "Streamlabs" | wrap service
+            | merge ("Brian" | wrap voice)
+            | merge (0 | wrap device)
+            | merge (60 | wrap timeout)
+            | merge (100 | wrap volume)
+            | merge ("0sec" | wrap wait)
+            | stor insert --table-name nuTTS
+        } catch {
+            |e| return ($e.json | from json | wrap error | to json)
+        }
+        # export stor to file
+        try { stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite" } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # run interactive config if no flags used
+    if $service == null and $voice == null and $device == null and $timeout == null and $volume == null and $wait == null {
+        let output = try { config_interactive } catch  { |e| return ($e.json | from json | wrap error) }
+        return $output
+    }
+    # get full TTS voice list
+    let list = main list | from json
+    # set service if not null
+    if $service != null and $voice != null {
+        # get list of services
+        let services = $list | columns
+        # check if input is in list of services
+        if $service in $services {
+            try { $service | wrap service | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+        } else {
+            return ("Invalid service input" | wrap error | to json)
+        }
+    }
+    # set voice if not null
+    if $service != null and $voice != null {
+        # get default service from stor
+        let service = try { stor open | to json | from json | get nuTTS.0.service } catch { |e| return ($e.json | from json | wrap error | to json) }
+        # get list of voices for service
+        let voices = try { $list | get $service | get voices } catch { |e| return ($e.json | from json | wrap error | to json) }
+        # check if input is in list of voices for service
+        if $voice in ($voices | get vid) {
+            # update stor
+            try { $voice | wrap voice | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+        } else {
+            return ("Invalid voice input" | wrap error | to json)
+        }
+    }
+    # set device if not null
+    if $device != null {
+        # update stor
+        try { $device | wrap device | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # set timeout if not null
+    if $timeout != null {
+        # update stor
+        try { $timeout | wrap timeout | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # set volume if not null
+    if $volume != null {
+        # update stor
+        try { $volume | wrap volume | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # set wait if not null
+    if $wait != null {
+        # update stor
+        try { $wait | into string | wrap wait | stor update --table-name nuTTS } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # export stor to file
+    try {
+        mv -f $"($nu.default-config-dir)/nuTTS.sqlite" $"($nu.default-config-dir)/nuTTS.sqlite.bak"
+    } catch {
+        |e| return ($e.json | from json | wrap error | to json)
+    }
+    try {
+        stor export --file-name $"($nu.default-config-dir)/nuTTS.sqlite"
+    } catch {
+        |e| mv -f $"($nu.default-config-dir)/nuTTS.sqlite.bak" $"($nu.default-config-dir)/nuTTS.sqlite"
+        return ($e.json | from json | wrap error | to json)
+    }
+    # output config in JSON format and delete table from memory
+    let output = try { stor open | $in.nuTTS.0 | to json } catch { |e| return ($e.json | from json | wrap error | to json) }
+    stor delete --table-name nuTTS
+    return $output
+}
+
 # Gets JSON list of TTS voices
 def "main list" [
-    --service (-s):string = all # get voices for specific service
+    --service (-s):string # get voices for specific service
 ]: nothing -> string {
     # if no --service input, list all services from tts_list.json
-    if $service == "all" {
+    if $service == null {
         let list = try {
             http get -r "https://raw.githubusercontent.com/simoniz0r/nuTTS/main/tts_list.json"
         } catch {
@@ -148,6 +332,18 @@ def "main play" [
     --volume (-V):int # playback volume for TTS (0-100) (default: 100)
     --wait (-w):duration # seconds to wait before starting TTS playback (default: 0sec)
 ]: nothing -> string {
+    # check if config file exists
+    let settings = if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+        # get settings if nuTTS.sqlite exists
+        try { open $"($nu.default-config-dir)/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # get settings from default if no inputs
+    let voice = if $voice == null { $settings.voice? | default "Brian" } else { $voice }
+    let service = if $service == null { $settings.service? | default "Streamlabs" } else { $service }
+    let device = if $device == null { $settings.device? | default 0 } else { $device }
+    let timeout = if $timeout == null { $settings.timeout? | default 60 } else { $timeout }
+    let volume = if $volume == null { $settings.volume? | default 100 } else { $volume }
+    let wait = if $wait == null { $settings.wait? | default 0sec | into duration } else { $wait }
     # decode text
     let detext = $text | url decode
     # route based on service
@@ -185,6 +381,14 @@ def main [
     --service (-s):string # service to use for TTS voice (default: Streamlabs)
     --voice (-v):string # voice ID for TTS (default: Brian)
 ]: nothing -> string {
+    # check if config file exists
+    let settings = if ($"($nu.default-config-dir)/nuTTS.sqlite" | path type) == "file" {
+        # get settings if nuTTS.sqlite exists
+        try { open $"($nu.default-config-dir)/nuTTS.sqlite" | get nuTTS.0 } catch { |e| return ($e.json | from json | wrap error | to json) }
+    }
+    # get settings from default if no inputs
+    let voice = if $voice == null { $settings.voice? | default "Brian" } else { $voice }
+    let service = if $service == null { $settings.service? | default "Streamlabs" } else { $service }
     # decode text
     let detext = $text | url decode
     # route based on service
